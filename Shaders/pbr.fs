@@ -133,7 +133,13 @@ float geometry_smith( vec3 N, vec3 V, vec3 L, float roughness )
 vec2 sphere_to_polar( vec3 normal )
 {
   normal = normalize( normal );
-  return vec2( ( atan( normal.z, normal.x ) + skysphere_rotation ) / PI / 2.0 + 0.5, acos( normal.y ) / PI );
+  return vec2( ( atan( normal.z, normal.x ) + skysphere_rotation ) / PI / 2.0 + 0.5, clamp(acos( normal.y ) / PI, 0.5 / 180.0, 179.5 / 180.0) );
+}
+
+vec2 sphere_to_polar_clamp_y( vec3 normal, float texture_height )
+{
+  normal = normalize( normal );
+  return vec2( ( atan( normal.z, normal.x ) + skysphere_rotation ) / PI / 2.0 + 0.5, clamp(acos( normal.y ) / PI, 0.5 / texture_height, 179.5 / texture_height) );
 }
 
 vec3 sample_sky( vec3 normal )
@@ -182,10 +188,11 @@ vec3 sample_irradiance_fast( vec3 normal, vec3 vertex_tangent )
   // Sample the irradiance map if it exists, otherwise fall back to blurred reflection map.
   if ( has_tex_skyenv )
   {
-    vec2 polar = sphere_to_polar( normal );
+    vec2 polar = sphere_to_polar_clamp_y( normal, 180.0 );	
     // HACK: Sample a smaller mip here to avoid high frequency color variations on detailed normal
     //       mapped areas.
-    float miplevel = 5.5; // tweaked for a 360x180 irradiance texture
+    // float miplevel = 5.5; // tweaked for a 360x180 irradiance texture
+	float miplevel = 0.0; // Undoing that hack because it creates ugly results on poles of smooth objects, like... a sphere.
     return textureLod( tex_skyenv, polar, miplevel ).rgb * exposure;
   }
   else
@@ -248,11 +255,15 @@ void main(void)
   float roughness = 1.0;
   float metallic = 0.0;
   float ao = 1.0;
+  float alpha = 1.0;
 
+  vec4 baseColor_alpha;
   if ( map_albedo.has_tex )
-    baseColor = sample_colormap( map_albedo, out_texcoord ).xyz;
+    baseColor_alpha = sample_colormap( map_albedo, out_texcoord );
   else
-    baseColor = sample_colormap( map_diffuse, out_texcoord ).xyz;
+    baseColor_alpha = sample_colormap( map_diffuse, out_texcoord );
+  baseColor = baseColor_alpha.xyz;
+  alpha = baseColor_alpha.w;
 
   roughness = sample_colormap( map_roughness, out_texcoord ).x;
   metallic = sample_colormap( map_metallic, out_texcoord ).x;
@@ -398,7 +409,7 @@ void main(void)
     }
   }
 
-  vec3 color = ambient + Lo + emissive;
+  vec3 color = (ambient + Lo) * alpha + emissive; // premultiplied alpha, but it leaves reflected and emissive light alone
 
   if ( use_ambient_debugging )
   {
@@ -415,5 +426,5 @@ void main(void)
   color = pow( color, vec3(1. / 2.2) );
   float dither = random( uvec3( floatBitsToUint( gl_FragCoord.xy ), frame_count ) );
   color += vec3( (-1.0/256.) + (2./256.) * dither );
-  frag_color = vec4( color, 1.0 );
+  frag_color = vec4( color, alpha ); // technically this alpha may be too transparent, if there is a lot of reflected light we wouldn't see the background, maybe we can approximate it well enough by adding a fresnel term
 }

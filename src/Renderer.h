@@ -22,7 +22,7 @@ typedef struct
 
 namespace Renderer
 {
-enum TEXTURETYPE
+enum class TEXTURETYPE
 {
   TEXTURETYPE_1D = 1,
   TEXTURETYPE_2D = 2,
@@ -36,6 +36,7 @@ struct Texture
   std::string mFilename;
   unsigned int mGLTextureID;
   int mGLTextureUnit;
+  bool transparent;
 };
 
 struct Shader

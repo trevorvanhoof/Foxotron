@@ -1,3 +1,4 @@
+#include <set>
 #include <map>
 #include <vector>
 #include <string>
@@ -67,12 +68,13 @@ public:
   void __SetupVertexArray( Renderer::Shader * _shader, const char * name, int sizeInFloats, int & offsetInFloats);
   void RebindVertexArray( Renderer::Shader * _shader );
 
-  void SetColorMap( Renderer::Shader * _shader, const char * _name, const ColorMap & _colorMap );
+  // void SetColorMap( Renderer::Shader * _shader, const char * _name, const ColorMap & _colorMap );
 
   static std::string GetSupportedExtensions();
 
   std::map<int, Node> mNodes;
   std::map<int, Mesh> mMeshes;
+  std::set<int> mTranslucentMeshes;
   std::map<int, Material> mMaterials;
   glm::mat4x4 * mMatrices;
   glm::vec3 mAABBMin;
