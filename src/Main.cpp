@@ -221,11 +221,9 @@ void loadSkyImages( const jsonxx::Object & obj )
 
       glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
       glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   }
 
-  if ( gSkyImages.env  )
+  if ( gSkyImages.env )
   {
     Renderer::ReleaseTexture( gSkyImages.env );
     gSkyImages.env = NULL;
@@ -242,10 +240,8 @@ void loadSkyImages( const jsonxx::Object & obj )
     {
       glBindTexture( GL_TEXTURE_2D, gSkyImages.env->mGLTextureID );
 
-      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
       glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
     else
     {
@@ -264,8 +260,8 @@ void loadSkyImages( const jsonxx::Object & obj )
 
     if ( uv != glm::vec2( 0.f, 0.f ) )
     {
-      gSkyImages.sunYaw = (float)(M_PI * (-2. * uv.x + 0.5f));
-      gSkyImages.sunPitch = (float)((.5f - uv.y) * M_PI);
+      gSkyImages.sunYaw = M_PI * (-2. * uv.x + 0.5f);
+      gSkyImages.sunPitch = (.5f - uv.y) * M_PI;
     }
   }
 }
@@ -295,7 +291,7 @@ int main( int argc, const char * argv[] )
   //////////////////////////////////////////////////////////////////////////
   // Init renderer
   RENDERER_SETTINGS settings;
-  settings.mVsync = true; // false;
+  settings.mVsync = false;
   settings.mWidth = 1280;
   settings.mHeight = 720;
   settings.mWindowMode = RENDERER_WINDOWMODE_WINDOWED;
@@ -303,7 +299,7 @@ int main( int argc, const char * argv[] )
 #ifndef _DEBUG
   settings.mWidth = 1920; // TODO maybe replace this with actual screen size?
   settings.mHeight = 1080;
-  // settings.mWindowMode = RENDERER_WINDOWMODE_FULLSCREEN;
+  settings.mWindowMode = RENDERER_WINDOWMODE_FULLSCREEN;
   settings.mMultisampling = true;
   if ( !SetupDialog::Open( &settings ) )
   {
@@ -430,7 +426,7 @@ int main( int argc, const char * argv[] )
     }
     if ( ImGui::IsKeyPressed( GLFW_KEY_PAGE_UP, false ) )
     {
-      const int shaderCount = (int)options.get<jsonxx::Array>( "shaders" ).size();
+      const int shaderCount = options.get<jsonxx::Array>( "shaders" ).size();
       for ( int i = 0; i < shaderCount; i++ )
       {
         const jsonxx::Object & shaderConfig = options.get<jsonxx::Array>( "shaders" ).get<jsonxx::Object>( i );
@@ -445,8 +441,8 @@ int main( int argc, const char * argv[] )
     }
     if ( ImGui::IsKeyPressed( GLFW_KEY_PAGE_DOWN, false ) )
     {
-      const int shaderCount = (int)options.get<jsonxx::Array>( "shaders" ).size();
-      for (int i = 0; i < shaderCount; i++ )
+      const int shaderCount = options.get<jsonxx::Array>( "shaders" ).size();
+      for ( int i = 0; i < shaderCount; i++ )
       {
         const jsonxx::Object & shaderConfig = options.get<jsonxx::Array>( "shaders" ).get<jsonxx::Object>( i );
         if ( &shaderConfig == gCurrentShaderConfig )
@@ -792,7 +788,7 @@ int main( int argc, const char * argv[] )
 
       if ( gSkyImages.reflection )
       {
-        const float mipCount = (float)floor( log2( gSkyImages.reflection->mHeight ) );
+        const float mipCount = floor( log2( gSkyImages.reflection->mHeight ) );
         skysphereShader->SetTexture( "tex_skysphere", gSkyImages.reflection );
         skysphereShader->SetConstant( "skysphere_mip_count", mipCount );
       }
@@ -849,7 +845,7 @@ int main( int argc, const char * argv[] )
     gCurrentShader->SetConstant( "has_tex_skyenv", gSkyImages.env != NULL );
     if ( gSkyImages.reflection )
     {
-      float mipCount = (float)floor( log2( gSkyImages.reflection->mHeight ) );
+      float mipCount = floor( log2( gSkyImages.reflection->mHeight ) );
       gCurrentShader->SetTexture( "tex_skysphere", gSkyImages.reflection );
       gCurrentShader->SetConstant( "skysphere_mip_count", mipCount );
     }
